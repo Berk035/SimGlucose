@@ -65,7 +65,7 @@ class BBController(Controller):
         if meal > 0:
             logger.info('Calculating bolus ...')
             logger.debug('glucose = {}'.format(glucose))
-            print(f'meal = {meal*env_sample_time}')
+            print('meal = {meal*env_sample_time}')
             bolus = (
                 (meal * env_sample_time) / quest.CR.values + (glucose > 150) *
                 (glucose - self.target) / quest.CF.values).item()  # unit: U

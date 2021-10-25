@@ -11,7 +11,7 @@ import pandas as pd
 import copy
 import pkg_resources
 import logging
-import os
+import os, inspect, yaml
 from datetime import datetime
 from datetime import timedelta
 import platform
@@ -26,6 +26,18 @@ SENSOR_PARA_FILE = pkg_resources.resource_filename(
 INSULIN_PUMP_PARA_FILE = pkg_resources.resource_filename(
     'simglucose', 'params/pump_params.csv')
 
+def parse_config(config):
+    with open(config, 'r') as f:
+        config_data = yaml.load(f, Loader=yaml.FullLoader)
+    return config_data
+
+parentdir = os.path.join(os.path.expanduser("~"),'PycharmProjects','simglucose')
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+config_file = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                           '..', '..', 'examples', 'configs', 'user_info.yaml'))
+print(config_file)
+config = parse_config(config_file)
 
 def pick_patients():
     patient_params = pd.read_csv(PATIENT_PARA_FILE)
