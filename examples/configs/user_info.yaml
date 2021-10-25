@@ -1,20 +1,19 @@
-show_animation: y
-multiple_process: y
-result_folder_name: deneme
+show_animation: True
+multiple_process: False
+result_folder_name: deneme_1
 ########################
 sim_duration: 4
 
 #random: 1, custom: 2
 scenario: 1
-seed: 100
-start_time: 08
+scenario_seed: 100
 
 #all: 1, adolescents: 2, adults: 3,  children: 4,  ID: 5
 patients: 3
 
 #Dexcom: 1, GuardianRT: 2, Navigator:3
 sensor: 1
-sensor_noise_seed: 100
+sensor_seed: 100
 
 #Cozmo: 1, Insulet: 2
 insulin_pump: 1

@@ -1,6 +1,11 @@
 from simglucose.simulation.sim_engine import SimObj, batch_sim
 from simglucose.simulation.env import T1DSimEnv
 from simglucose.controller.basal_bolus_ctrller import BBController
+from simglucose.controller.pid_ctrller import PIDController
+
+#TODO: RL controller will implemented it
+from simglucose.controller.rl_ctrller import RLController
+
 from simglucose.sensor.cgm import CGMSensor
 from simglucose.actuator.pump import InsulinPump
 from simglucose.patient.t1dpatient import T1DPatient
@@ -39,9 +44,9 @@ config_file = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__fi
 print(config_file)
 config = parse_config(config_file)
 
-def pick_patients():
+def pick_patients(select1=None,select2=None):
     patient_params = pd.read_csv(PATIENT_PARA_FILE)
-    while True:
+    while (select1 is None):
         select1 = input('Select virtual patients:\n' +
                         '[1] All\n' +
                         '[2] All Adolescents\n' +
@@ -109,10 +114,11 @@ def pick_patients():
     return patients
 
 
-def pick_cgm_sensor():
+def pick_cgm_sensor(cgm=None, s_seed=None):
     sensor_params = pd.read_csv(SENSOR_PARA_FILE)
     total_sensor_num = len(sensor_params.index)
-    while True:
+    selection, seed = cgm, s_seed
+    while (cgm is None):
         print('Select the CGM sensor:')
         for i in range(total_sensor_num):
             print('[{0}] {1}'.format(i + 1, sensor_params['Name'][i]))
@@ -133,7 +139,7 @@ def pick_cgm_sensor():
     sensor = sensor_params['Name'][selection - 1]
     logger.info('Selected sensor:\n{}'.format(sensor))
 
-    while True:
+    while (s_seed is None):
         input_value = input('Select Random Seed for Sensor Noise [None]: ')
         try:
             seed = int(input_value)
@@ -149,9 +155,10 @@ def pick_cgm_sensor():
     return sensor, seed
 
 
-def pick_insulin_pump():
+def pick_insulin_pump(name_pump=None):
     pump_params = pd.read_csv(INSULIN_PUMP_PARA_FILE)
-    while True:
+    selection = name_pump
+    while (name_pump is None):
         print('Select the insulin pump:')
         for i in range(len(pump_params)):
             print('[{}] {}'.format(i + 1, pump_params['Name'][i]))
@@ -210,29 +217,44 @@ def pick_scenario():
     return scenario
 
 
-def pick_controller():
-    while True:
+def pick_controller(cnt=None):
+    selection = cnt
+    while (cnt is None):
         print('Select controller:')
         print('[1] Basal-Bolus Controller')
+        print('[2] PID Controller')
+        print('[3] RL Controller')
         input_value = input('>>>')
         try:
             selection = int(input_value)
         except ValueError:
             print('Please input an integer!')
             continue
-        if selection < 1 or selection > 1:
+        if selection < 1 or selection > 3:
             print('Please input a number from the list!')
         else:
             break
     if selection == 1:
         controller = BBController()
+    elif selection == 2:
+        controller = PIDController()
+    elif selection == 3:
+        controller = RLController()
+    else:
+        print("Controller error!")
+        controller = None
     return controller
 
 
 def build_envs(scenario, start_time):
-    patient_names = pick_patients()
-    cgm_sensor_name, cgm_seed = pick_cgm_sensor()
-    insulin_pump_name = pick_insulin_pump()
+    sel = config["patients"]
+    cgm = config["sensor"]
+    cgm_seed = config["sensor_seed"]
+    pump = config["insulin_pump"]
+
+    patient_names = pick_patients(select1=sel)
+    cgm_sensor_name, cgm_seed = pick_cgm_sensor(cgm=cgm, s_seed=cgm_seed)
+    insulin_pump_name = pick_insulin_pump(name_pump=pump)
     if scenario is None:
         scenario = pick_scenario()
 
@@ -264,15 +286,29 @@ def create_sim_instance(sim_time=None,
                         start_time=None,
                         save_path=None,
                         animate=True):
+
+    sim_time = timedelta(hours=float(config["sim_duration"]))
     if sim_time is None:
         sim_time = timedelta(hours=float(
             input('Input simulation time (hr): ')))
 
-    if scenario is None:
+    scenario = config["scenario"]
+    seed = config["scenario_seed"]
+    if scenario == 1:
+        scenario = RandomScenario(seed=seed)
+    elif scenario == 2:
+        scenario = CustomScenario()
+    elif scenario is None:
         scenario = pick_scenario()
     envs = build_envs(scenario, start_time)
 
-    if controller is None:
+    controller = config["controller"]
+
+    if controller == 1:
+        controller = BBController()
+    if controller == 2:
+        controller = RLController()
+    elif controller is None:
         controller = pick_controller()
 
     ctrllers = [copy.deepcopy(controller) for _ in range(len(envs))]
@@ -306,6 +342,15 @@ def simulate(sim_time=None,
     animate    - switch for animation. True/False.
     parallel   - switch for parallel computing. True/False.
     '''
+
+    animate = config["show_animation"]
+    parallel = config["multiple_process"]
+
+    if config["result_folder_name"] is None:
+        save_path = pick_save_path()
+    else:
+        save_path = '/home/berk/PycharmProjects/simglucose/examples/results/' + str(config["result_folder_name"])
+
     if animate is None:
         while True:
             select = input('Show animation? (y/n) ')
@@ -334,9 +379,6 @@ def simulate(sim_time=None,
         if animate is True and parallel is True:
             raise ValueError(
                 """animate and parallel cannot be turned on at the same time in macOS.""")
-
-    if save_path is None:
-        save_path = pick_save_path()
 
     sim_instances = create_sim_instance(sim_time=sim_time,
                                         scenario=scenario,
