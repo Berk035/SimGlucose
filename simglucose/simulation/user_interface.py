@@ -294,8 +294,9 @@ def create_sim_instance(sim_time=None,
 
     scenario = config["scenario"]
     seed = config["scenario_seed"]
+    st = config["start_time"]
     if scenario == 1:
-        scenario = RandomScenario(seed=seed)
+        scenario = RandomScenario(seed=seed, start_time=st)
     elif scenario == 2:
         scenario = CustomScenario()
     elif scenario is None:
@@ -306,7 +307,9 @@ def create_sim_instance(sim_time=None,
 
     if controller == 1:
         controller = BBController()
-    if controller == 2:
+    elif controller == 2:
+        controller = PIDController()
+    elif controller == 3:
         controller = RLController()
     elif controller is None:
         controller = pick_controller()

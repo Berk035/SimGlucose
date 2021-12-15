@@ -6,7 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 class PIDController(Controller):
-    def __init__(self, P=1, I=0, D=0, target=140):
+    #def __init__(self, P=1, I=0, D=0, target=140):
+    def __init__(self, P = 0.001, I = 0.00001, D = 0.001, target=140):
         self.P = P
         self.I = I
         self.D = D
