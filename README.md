@@ -55,8 +55,7 @@ If [rllab (optional)](https://github.com/rll/rllab) is installed, the package wi
 Note: there might be some minor differences between auto install version and manual install version. Use `git clone` and manual installation to get the latest version.
 
 ## Installation of rllab
-- You need to edit your PYTHONPATH to include the rllab directory:
-``` export PYTHONPATH=path_to_rllab:$PYTHONPATH ```
+- You need to edit your PYTHONPATH to include the rllab directory: ``` export PYTHONPATH=path_to_rllab:$PYTHONPATH ```
 - Clone the repository:
 ``` git clone https://github.com/rll/rllab ```
 - Express installation:
