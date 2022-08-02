@@ -1,15 +1,15 @@
 show_animation: True
-multiple_process: False
-result_folder_name: deneme_1
+multiple_process: True
+result_folder_name: deneme_ppo
 ########################
-sim_duration: 4
+sim_duration: 24
 
 #random: 1, custom: 2
 scenario: 1
 scenario_seed: 100
 
 #Start time for simulation
-start_time: 9
+start_time: 8
 
 #all: 1, adolescents: 2, adults: 3,  children: 4,  ID: 5
 patients: 3
@@ -22,4 +22,4 @@ sensor_seed: 100
 insulin_pump: 1
 
 #Basal-Bolus Controller:1, PID-Controller:2, RL-Controller:3
-controller: 2
+controller: 3

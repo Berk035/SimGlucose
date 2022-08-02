@@ -26,6 +26,7 @@ class MyController(Controller):
                  controller action contains two entries: basal, bolus
         '''
         self.state = observation
+
         action = Action(basal=0, bolus=0)
         return action
 
