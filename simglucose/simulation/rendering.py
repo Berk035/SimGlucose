@@ -80,14 +80,14 @@ class Viewer(object):
                     max(max(data['BG']), max(data['CGM'])))
         adjust_xlim(self.axes[0], data.index[-1])
 
-        self.lines[2].set_xdata(data.index.values)
-        self.lines[2].set_ydata(data['CHO'].values)
+        #self.lines[2].set_xdata(data.index.values)
+        #self.lines[2].set_ydata(data['CHO'].values)
 
-        self.axes[1].draw_artist(self.axes[1].patch)
-        self.axes[1].draw_artist(self.lines[2])
+        #self.axes[1].draw_artist(self.axes[1].patch)
+        #self.axes[1].draw_artist(self.lines[2])
 
-        adjust_ylim(self.axes[1], min(data['CHO']), max(data['CHO']))
-        adjust_xlim(self.axes[1], data.index[-1])
+        #adjust_ylim(self.axes[1], min(data['CHO']), max(data['CHO']))
+        #adjust_xlim(self.axes[1], data.index[-1])
 
         self.lines[3].set_xdata(data.index.values)
         self.lines[3].set_ydata(data['insulin'].values)

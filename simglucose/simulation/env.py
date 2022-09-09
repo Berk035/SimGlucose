@@ -163,7 +163,7 @@ class T1DSimEnv(object):
         df['Time'] = pd.Series(self.time_hist)
         df['BG'] = pd.Series(self.BG_hist)
         df['CGM'] = pd.Series(self.CGM_hist)
-        df['CHO'] = pd.Series(self.CHO_hist)
+        #df['CHO'] = pd.Series(self.CHO_hist)
         df['insulin'] = pd.Series(self.insulin_hist)
         df['LBGI'] = pd.Series(self.LBGI_hist)
         df['HBGI'] = pd.Series(self.HBGI_hist)

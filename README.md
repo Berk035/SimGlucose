@@ -396,3 +396,11 @@ to create a pull request from your fork. This will send an email to the committe
 
 (If any of the above seems like magic to you, please look up the
 [Git documentation](https://git-scm.com/documentation) on the web, or ask a friend or another contributor for help.)
+
+
+
+## Some To Do:
+### 09/09/2022
+- env.render() configuration can be parameterized from config file.
+- smooth actions to environment from keyboard. 
+- train stable baselines ''GAIL'' algo and ''decision-transforms'' to environment. 
