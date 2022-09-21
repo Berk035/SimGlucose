@@ -8,24 +8,7 @@ Action = namedtuple('scenario_action', ['meal'])
 
 
 class Scenario(object):
-<<<<<<< HEAD
     def __init__(self, start_time):
-=======
-    def __init__(self, start_time=None):
-        if start_time is None:
-            now = datetime.now()
-            start_hour = timedelta(hours=float(
-                input('Input simulation start time (hr): ')))
-            start_time = datetime.combine(now.date(),
-                                          datetime.min.time()) + start_hour
-            print('Simulation start time is set to {}.'.format(start_time))
-        else:
-            now = datetime.now()
-            start_hour = timedelta(hours=float(start_time))
-            start_time = datetime.combine(now.date(),
-                                          datetime.min.time()) + start_hour
-            print('Simulation start time is set to {}.'.format(start_time))
->>>>>>> 24ef8500ef571f42b31c5910e520a278f15db145
         self.start_time = start_time
 
     def get_action(self, t):

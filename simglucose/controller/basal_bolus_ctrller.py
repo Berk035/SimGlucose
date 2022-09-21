@@ -64,13 +64,8 @@ class BBController(Controller):
         basal = u2ss * BW / 6000  # unit: U/min
         if meal > 0:
             logger.info('Calculating bolus ...')
-<<<<<<< HEAD
-            logger.info(f'Meal = {meal} g/min')
-            logger.info(f'glucose = {glucose}')
-=======
-            logger.debug('glucose = {}'.format(glucose))
-            print('meal = {meal*env_sample_time}')
->>>>>>> 24ef8500ef571f42b31c5910e520a278f15db145
+            logger.info('Meal = {meal} g/min')
+            logger.info('glucose = {glucose}')
             bolus = (
                 (meal * env_sample_time) / quest.CR.values + (glucose > 150) *
                 (glucose - self.target) / quest.CF.values).item()  # unit: U
