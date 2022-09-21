@@ -17,9 +17,14 @@ PATIENT_PARA_FILE = pkg_resources.resource_filename(
 
 class T1DPatient(Patient):
     SAMPLE_TIME = 1  # min
-    EAT_RATE = 5    # g/min CHO
+    EAT_RATE = 5  # g/min CHO
 
-    def __init__(self, params, init_state=None, random_init_bg=False, seed=None, t0=0):
+    def __init__(self,
+                 params,
+                 init_state=None,
+                 random_init_bg=False,
+                 seed=None,
+                 t0=0):
         '''
         T1DPatient constructor.
         Inputs:
@@ -82,17 +87,16 @@ class T1DPatient(Patient):
         # Detect eating or not and update last digestion amount
         if action.CHO > 0 and self._last_action.CHO <= 0:
             logger.info('t = {}, patient starts eating ...'.format(self.t))
-            self._last_Qsto = self.state[0] + self.state[1]
-            self._last_foodtaken = 0
+            self._last_Qsto = self.state[0] + self.state[1]  # unit: mg
+            self._last_foodtaken = 0  # unit: g
             self.is_eating = True
 
         if to_eat > 0:
-            # print(action.CHO)
             logger.debug('t = {}, patient eats {} g'.format(
                 self.t, action.CHO))
 
         if self.is_eating:
-            self._last_foodtaken += action.CHO   # g
+            self._last_foodtaken += action.CHO  # g
 
         # Detect eating ended
         if action.CHO <= 0 and self._last_action.CHO > 0:
@@ -103,10 +107,8 @@ class T1DPatient(Patient):
         self._last_action = action
 
         # ODE solver
-        # print('Current simulation time: {}'.format(self.t))
-        # print(self._last_Qsto)
-        self._odesolver.set_f_params(
-            action, self._params, self._last_Qsto, self._last_foodtaken)
+        self._odesolver.set_f_params(action, self._params, self._last_Qsto,
+                                     self._last_foodtaken)
         if self._odesolver.successful():
             self._odesolver.integrate(self._odesolver.t + self.sample_time)
         else:
@@ -122,7 +124,10 @@ class T1DPatient(Patient):
 
         # Glucose in the stomach
         qsto = x[0] + x[1]
-        Dbar = last_Qsto + last_foodtaken
+        # NOTE: Dbar is in unit mg, hence last_foodtaken needs to be converted
+        # from mg to g. See https://github.com/jxx123/simglucose/issues/41 for
+        # details.
+        Dbar = last_Qsto + last_foodtaken * 1000  # unit: mg
 
         # Stomach solid
         dxdt[0] = -params.kmax * x[0] + d
@@ -130,8 +135,9 @@ class T1DPatient(Patient):
         if Dbar > 0:
             aa = 5 / 2 / (1 - params.b) / Dbar
             cc = 5 / 2 / params.d / Dbar
-            kgut = params.kmin + (params.kmax - params.kmin) / 2 * (np.tanh(
-                aa * (qsto - params.b * Dbar)) - np.tanh(cc * (qsto - params.d * Dbar)) + 2)
+            kgut = params.kmin + (params.kmax - params.kmin) / 2 * (
+                np.tanh(aa * (qsto - params.b * Dbar)) -
+                np.tanh(cc * (qsto - params.d * Dbar)) + 2)
         else:
             kgut = params.kmax
 
@@ -191,7 +197,7 @@ class T1DPatient(Patient):
         dxdt[11] = params.kd * x[10] - params.ka2 * x[11]
         dxdt[11] = (x[11] >= 0) * dxdt[11]
 
-        # subcutaneous glcuose
+        # subcutaneous glucose
         dxdt[12] = (-params.ksc * x[12] + params.ksc * x[3])
         dxdt[12] = (x[12] >= 0) * dxdt[12]
 
@@ -250,12 +256,14 @@ class T1DPatient(Patient):
         self.random_state = np.random.RandomState(self.seed)
         if self.random_init_bg:
             # Only randomize glucose related states, x4, x5, and x13
-            mean = [1.0 * self.init_state[3], 
-                    1.0 * self.init_state[4], 
-                    1.0 * self.init_state[12]]
-            cov = np.diag([0.1 * self.init_state[3], 
-                           0.1 * self.init_state[4], 
-                           0.1 * self.init_state[12]]) 
+            mean = [
+                1.0 * self.init_state[3], 1.0 * self.init_state[4],
+                1.0 * self.init_state[12]
+            ]
+            cov = np.diag([
+                0.1 * self.init_state[3], 0.1 * self.init_state[4],
+                0.1 * self.init_state[12]
+            ])
             bg_init = self.random_state.multivariate_normal(mean, cov)
             self.init_state[3] = 1.0 * bg_init[0]
             self.init_state[4] = 1.0 * bg_init[1]
@@ -280,8 +288,7 @@ if __name__ == '__main__':
     # ch.setLevel(logging.DEBUG)
     ch.setLevel(logging.INFO)
     # create formatter
-    formatter = logging.Formatter(
-        '%(name)s: %(levelname)s: %(message)s')
+    formatter = logging.Formatter('%(name)s: %(levelname)s: %(message)s')
     # add formatter to ch
     ch.setFormatter(formatter)
     # add ch to logger
