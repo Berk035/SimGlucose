@@ -275,8 +275,7 @@ def pick_save_path():
     if foldername == 'default' or foldername == '':
         foldername = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
-    #save_path = os.path.join(os.path.abspath('./results/'), foldername)
-    save_path = os.path.join('/home/berk/VS_Project/simglucose/results', foldername)
+    save_path = os.path.join(os.path.abspath('./results/'), foldername)
     print('Results will be saved in {}'.format(save_path))
     return save_path
 
@@ -295,12 +294,9 @@ def create_sim_instance(sim_time=None,
 
     scenario = config["scenario"]
     seed = config["scenario_seed"]
-    now = datetime.now()
-    start_hour = timedelta(
-        hours=float(config["start_time"]))
-    start_time = datetime.combine(now.date(), datetime.min.time()) + start_hour
+    st = config["start_time"]
     if scenario == 1:
-        scenario = RandomScenario(seed=seed, start_time=start_time)
+        scenario = RandomScenario(seed=seed, start_time=st)
     elif scenario == 2:
         scenario = CustomScenario()
     elif scenario is None:

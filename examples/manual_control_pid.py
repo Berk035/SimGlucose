@@ -1,15 +1,15 @@
 #!/home/berk/VS_Project/simglucose/SIMBG/bin/python
 
 import gym
+from numpy import array
 import pygame
 from gym.envs.registration import register
 import sys, keyboard
 from pygame.locals import *
 import pickle as pkl
+import argparse
+from simglucose.controller.base import Action
 
-MODE = 1 # 0: read, 1: collect
-save_path = '/home/berk/VS_Project/simglucose/examples/trajectories/data.pickle'
-memory = {'states': [], 'actions': [], 'rewards': [], 'dones': []}
 
 class PIDAction:
     def __init__(self, P=1, I=0, D=0, target=1):
@@ -33,19 +33,30 @@ class PIDAction:
         self.prev_state = control
         self.integrated_state += (control - self.target) * sample_time
 
-        # return the actionq
+        # # return the actionq
         action = control_input
-        if action<0:
+        if action <=0:
+            #self.target=0
             action=0
-        #print(f"Target: \t {(self.target)} \n Action: \t {(action)}")
-
+        # #print(f"Target: \t {(self.target)} \n Action: \t {(action)}")
+    
+        print("Target:%.3f"%self.target)
         return action
+        
+    def reset(self):
+        self.prev_state = 0
+        self.integrated_state = 0
+
+    def key_callback(self,act):
+        if keyboard.is_pressed('up'):
+            act +=0.5
+        if keyboard.is_pressed('down'):
+            act -=0.5
+        return act
 
 
 def main():
-    trajectories = 0
-    episodes = 10
-    timesteps = 100
+    n_trajectory = 0
 
     # Register gym environment. By specifying kwargs,
     # you are able to choose which patient to simulate.
@@ -60,30 +71,35 @@ def main():
     env = gym.make('simglucose-adult-v1')
     observation = env.reset()
     action_ref = 0
-    act_obj = PIDAction(P=0.1, I=0.001, D=1, target=action_ref)
+    act_obj = PIDAction(P=args.pid_tune[0], 
+                        I=args.pid_tune[1], 
+                        D=args.pid_tune[2], target=action_ref)
 
-    if MODE:
-        for e in range(episodes):
+    # 0: read, 1: collect
+    if args.collect:
+
+        try:
+            with open(args.save_path, 'rb') as handle:
+                memory = pkl.load(handle)
+        except:
+            print('No saved trajectories found')
+            pass
+        
+        memory = {'states': [], 'actions': [], 'rewards': [], 'dones': []}
+        for e in range(args.episodes):
             obs_record = []
             rew_record = []
             action_record = []
+            dones = []
 
-            try:
-                with open(save_path, 'rb') as handle:
-                    memory = pkl.load(handle)
-            except:
-                print('No saved trajectories found')
-                pass
-
-            for t in range(timesteps):
+            for t in range(args.timesteps):
                 env.render(mode='human')
 
-
-                if keyboard.is_pressed('up'):
-                    action_ref += 0.5
-                if keyboard.is_pressed('down'):
-                    action_ref -= 0.5
-
+                if args.collect: action_ref = act_obj.key_callback(action_ref)
+                # if keyboard.is_pressed('up'):
+                #     action_ref +=0.5
+                # if keyboard.is_pressed('down'):
+                #     action_ref -=0.5
                 action = act_obj.policy(action_ref)
 
                 # Action in the gym environment is a scalar
@@ -93,46 +109,57 @@ def main():
                 # In the perfect situation, the agent should be able
                 # to control the glucose only through basal instead
                 # of asking patient to take bolus
-                print(f"Action: {action}")
+                print("Action: %.3f"%action)
                 print(f"Observation: {observation}")
+                #print(f"Timestep: {t} \n Traj: {n_trajectory}")
 
                 observation, reward, done, info = env.step(action)
 
                 obs_record.append(observation)
                 rew_record.append(reward)
                 action_record.append(action)
+                dones.append(done)
 
-                memory['states'].append(observation)
-                memory['actions'].append(action)
-                memory['rewards'].append(reward)
-                memory['dones'].append(done)
-                
-                if done or t==timesteps:
-                    observation = env.reset()
+                if done or t==(args.timesteps-1):
+                    #GAIL uses fixed timestep for all records
+                    if t==(args.timesteps-1):
+                        memory['states'].append(obs_record)
+                        memory['actions'].append(action_record)
+                        memory['rewards'].append(rew_record)
+                        memory['dones'].append(dones)
                     print("Episode finished after {} timesteps".format(t + 1))
-                    trajectories +=1
-                    action_ref, action = 0,0
-                    act_obj = PIDAction(P=0.1, I=0.001, D=1, target=action_ref)
+                    observation = env.reset()
+                    act_obj.reset()
                     env.close()
+                    n_trajectory+=1
                     break
 
-        print('trajectories:', trajectories)
+        print('trajectories:', n_trajectory)
         print('states collected:', len(memory['states']))
 
-        with open(save_path, 'wb') as handle:
+        with open(args.save_path, 'wb') as handle:
             f = pkl.dump(memory, handle, protocol=pkl.HIGHEST_PROTOCOL)
             #f.close()
-            print("trajectories saved to", save_path)
+            print("trajectories saved to", args.save_path)
     else:
         try:
-            with open(save_path, 'rb') as handle:
+            with open(args.save_path, 'rb') as handle:
                 memory = pkl.load(handle)
         except:
             print('No saved trajectories found')
             pass
 
-        print(f"Length Memory States: {len(memory['states'])}")
-        #print(f"Memory: {memory['states']}")
+        print(f"Length Memory Trajectories: {len(memory['dones'])}")
+        print(f"Length Memory Timesteps: {len(memory['dones'][1])}")
+        print(f"Memory Dones: {memory['dones'][0][-10:]}")
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--collect', type=bool, default= 0)
+    parser.add_argument('--save_path', type=str, default= '/home/berk/VS_Project/simglucose/examples/trajectories/data.pickle')
+    parser.add_argument('--pid_tune', nargs="+", default= [0.1, 0, 0.1])
+    parser.add_argument('--episodes', type=int, default= 2)
+    parser.add_argument('--timesteps', type=int, default= 100)
+
+    args = parser.parse_args()
     main()

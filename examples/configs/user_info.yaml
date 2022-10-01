@@ -1,12 +1,12 @@
 show_animation: True
 multiple_process: False
-result_folder_name: deneme_ppo
+result_folder_name: /deneme_ppo
 ########################
 #UI CHO Screen
 cho_screen: False
 
 #Simulation time
-sim_duration: 24
+sim_duration: 4
 
 #random: 1, custom: 2
 scenario: 1
