@@ -10,7 +10,6 @@ import pickle as pkl
 import argparse
 from simglucose.controller.base import Action
 import pandas as pd
-import glob
 
 
 class PIDAction:
@@ -90,6 +89,9 @@ def main():
             pass
         
         memory = {'states': [], 'actions': [], 'rewards': [], 'dones': []}
+        name_df = ["CGM", "Action", "Score", "Dones"]
+        
+
         for e in range(args.episodes):
             obs_record = []
             rew_record = []
@@ -101,31 +103,29 @@ def main():
                 env.render(mode='human')
 
                 if args.collect: action_ref = act_obj.key_callback(action_ref)
-                # if keyboard.is_pressed('up'):
-                #     action_ref +=0.5
-                # if keyboard.is_pressed('down'):
-                #     action_ref -=0.5
-                action = act_obj.policy(action_ref)
 
-                # Action in the gym environment is a scalar
-                # representing the basal insulin, which differs from
-                # the regular controller action outside the gym
-                # environment (a tuple (basal, bolus)).qq
-                # In the perfect situation, the agent should be able
-                # to control the glucose only through basal instead
-                # of asking patient to take bolus
-                
+                action = act_obj.policy(action_ref)
                 #print("Action: %.3f"%action)
                 #print(f"Observation: {observation}")
                 #print(f"Timestep: {t} \n Traj: {n_trajectory}")
 
                 observation, reward, done, info = env.step(action)
 
+
                 obs_record.append(observation)
                 rew_record.append(reward)
                 action_record.append(action)
                 dones.append(done)
                 timestamps.append(t)
+
+
+                #print("CGM:",env.env.CGM_hist)
+                #print("BG:",env.env.BG_hist)
+                #print("Insulin:",env.env.insulin_hist)
+                #print("Risk_hist:", env.env.risk_hist)
+                #print("Time:", env.env.time_hist)
+                #print("Time:", env.env.time)
+
 
                 if done or t==(args.timesteps-1):
                     #GAIL uses fixed timestep for all records
@@ -136,23 +136,39 @@ def main():
                         memory['dones'].append(dones)
 
                         data_list = {'BG': env.env.BG_hist[:-1], 'CGM': env.env.CGM_hist[:-1],'Insulin': env.env.insulin_hist, 
-                                     'Risk': env.env.risk_hist[:-1], 'Return': rew_record, 'Dones': dones}
-                    
+                                    'Risk': env.env.risk_hist[:-1], 'Return': rew_record, 'Dones': dones}
+                        # data_list = {'BG': env.env.BG_hist, 'CGM': env.env.CGM_hist,'Insulin': env.env.insulin_hist, 
+                        #             'Risk': env.env.risk_hist, 'Return': rew_record, 'Dones': dones}
                         df = pd.DataFrame(data=data_list, index=env.env.time_hist[:-1])
                         df.index.name = 'Date'
                         df.to_csv(args.save_path + "%s.csv"%e)
                     
                     print("Episode finished after {} timesteps".format(t + 1))
+                    
+                    #data_list = {'Action': action_record, 'Record': rew_record, 'Dones': dones}
+                    
+                    
                     observation = env.reset()
                     act_obj.reset()
                     env.close()
                     action_ref = 0
                     n_trajectory+=1
+                    break
 
-        print('trajectories:', n_trajectory)
-        print('states collected:', len(memory['states']))
+            data_list = {'Action': action_record, 'Record': rew_record, 'Dones': dones}
+            #df = pd.Series(data_list, index=timestamps)
+            #print(pd.Series(data_list, index=timestamps))
+            
 
-        #fusion_episodes()
+
+        #print('trajectories:', n_trajectory)
+        #print('states collected:', len(memory['states']))
+        fusion_episodes()
+
+        # with open(args.save_path, 'wb') as handle:
+        #     f = pkl.dump(memory, handle, protocol=pkl.HIGHEST_PROTOCOL)
+        #     #f.close()
+        #     print("trajectories saved to", args.save_path)
 
     else:
         try:
@@ -166,41 +182,8 @@ def main():
         #print(f"Length Memory Timesteps: {len(memory['dones'][1])}")
         #print(f"Memory Dones: {memory['dones'][0][-10:]}")
 
-        #bc_train()
-
 def fusion_episodes():
-    csv_files = glob.glob('/home/berk/VS_Project/simglucose/examples/trajectories'+'*.{}'.format('csv'))
-    df_concat = pd.concat([pd.read_csv(f) for f in csv_files ], ignore_index=True)
-    print(df_concat)
-
-
-
-def bc_train():
-
-    import torch
-    from models.BC_model import NeuralNet
-    from models.load_policy import get_batch,load_policy
-    import torch.nn as nn
-    import torch.optim as optim
-
-    network = NeuralNet(1,128,64,1)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(network.parameters(),0.01,0.9)
-
-    losses = []
-    iter = []
-    for i in range(20):
-        state,action = get_batch()
-        for j in range(state.size()[0]):
-            network.zero_grad()
-            output = network(state[j])
-            loss = criterion(output,action[j])
-            if i%10==0:
-                losses.append(loss)
-                iter.append(i)
-            loss.backward()
-            optimizer.step()
-        print(loss)
+    print("hello")
 
 
 
@@ -210,7 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', type=str, default= '/home/berk/VS_Project/simglucose/examples/trajectories/DATA')
     parser.add_argument('--pid_tune', nargs="+", default= [0.3, 0, 1])
     parser.add_argument('--episodes', type=int, default= 2)
-    parser.add_argument('--timesteps', type=int, default= 100)
+    parser.add_argument('--timesteps', type=int, default= 50)
 
     args = parser.parse_args()
     main()
