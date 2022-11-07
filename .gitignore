@@ -2,8 +2,10 @@
 *.pyc
 __pycache__/
 
-# results foler
+# results folder
 /results/
+/examples/results/
+/examples/trajectories
 
 # Setuptools distribution folder.
 /dist/
@@ -15,3 +17,4 @@ __pycache__/
 
 #Env files
 SIMBG/
+

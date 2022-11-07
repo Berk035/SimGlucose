@@ -1,5 +1,6 @@
 #!/home/berk/VS_Project/simglucose/SIMBG/bin/python
 
+from datetime import date
 import gym
 from numpy import array
 import pygame
@@ -11,6 +12,8 @@ import argparse
 from simglucose.controller.base import Action
 import pandas as pd
 import glob
+from datetime import datetime
+import numpy as np
 
 
 class PIDAction:
@@ -49,7 +52,6 @@ class PIDAction:
         self.prev_state = 0
         self.integrated_state = 0
         
-
     def key_callback(self,act):
         if keyboard.is_pressed('up'):
             act +=0.5
@@ -89,9 +91,10 @@ def main():
             print('No saved trajectories found')
             pass
         
-        memory = {'states': [], 'actions': [], 'rewards': [], 'dones': []}
+        memory = {'observations': [], 'next_observations':[], 'actions':[], 'rewards':[], 'terminals':[]}
         for e in range(args.episodes):
             obs_record = []
+            next_obs_record = []
             rew_record = []
             action_record = []
             dones = []
@@ -119,40 +122,66 @@ def main():
                 #print(f"Observation: {observation}")
                 #print(f"Timestep: {t} \n Traj: {n_trajectory}")
 
-                observation, reward, done, info = env.step(action)
+                next_observation, reward, done, info = env.step(action)
+                insulin_value = env.env.insulin_hist[-1]
+                risk = env.env.risk_hist[-1]
 
-                obs_record.append(observation)
-                rew_record.append(reward)
-                action_record.append(action)
-                dones.append(done)
+                obs_record.append([[observation.CGM], [risk]])
+                next_obs_record.append([next_observation.CGM])
+                action_record.append([insulin_value])
+                rew_record.append([reward])
+                dones.append([done])
                 timestamps.append(t)
 
+                observation = next_observation
+
                 if done or t==(args.timesteps-1):
+                    n_trajectory+=1
                     #GAIL uses fixed timestep for all records
                     if t==(args.timesteps-1):
-                        memory['states'].append(obs_record)
+
+                        memory['observations'].append(obs_record)
+                        memory['next_observations'].append(next_obs_record)
                         memory['actions'].append(action_record)
                         memory['rewards'].append(rew_record)
-                        memory['dones'].append(dones)
+                        memory['terminals'].append(dones)
 
-                        data_list = {'BG': env.env.BG_hist[:-1], 'CGM': env.env.CGM_hist[:-1],'Insulin': env.env.insulin_hist, 
-                                     'Risk': env.env.risk_hist[:-1], 'Return': rew_record, 'Dones': dones}
+                        concat_fnc = lambda a,b: [a,b]
+                        df = {'observations': list(map(concat_fnc,env.env.BG_hist[:-1],env.env.risk_hist[:-1])), 
+                                     'next_observations': next_obs_record,'actions': env.env.insulin_hist, 
+                                     'rewards': rew_record, 'terminals': dones}
                     
-                        df = pd.DataFrame(data=data_list, index=env.env.time_hist[:-1])
-                        df.index.name = 'Date'
-                        df.to_csv(args.save_path + "%s.csv"%e)
-                    
+                        # df['observations']=obs_record
+                        # df['next_observations']=next_obs_record
+                        # df['actions']=action_record
+                        # df['rewards']=rew_record
+                        # df['terminals']=dones
+                        # df.index = env.env.time_hist[:-1]
+                        # df.index.name = 'Date'
+
+                        #Save as pickle file
+                        with open(args.save_path + f"_eps_{n_trajectory}" + "-%s.pkl"%datetime.now().replace(second=0, microsecond=0), 'wb') as handle:
+                            pkl.dump(df, handle, protocol=pkl.HIGHEST_PROTOCOL)
+                        
+                        with open(args.save_path + "Memory" + f"_eps_{n_trajectory}" + "-%s.pkl"%datetime.now().replace(second=0, microsecond=0), 'wb') as handle:
+                            pkl.dump(memory, handle, protocol=pkl.HIGHEST_PROTOCOL)
+
+                        #Save as csv file
+                        df = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in df.items() ]))
+                        df.to_csv(args.save_path + f"_eps_{n_trajectory}" + "-%s.csv"%datetime.now().replace(second=0, microsecond=0))
+
+                        df2 = pd.DataFrame(data=memory)
+                        df2.to_csv(args.save_path + "Memory" + f"_eps_{n_trajectory}" + "-%s.csv"%datetime.now().replace(second=0, microsecond=0))
+
+
                     print("Episode finished after {} timesteps".format(t + 1))
                     observation = env.reset()
                     act_obj.reset()
                     env.close()
                     action_ref = 0
-                    n_trajectory+=1
 
         print('trajectories:', n_trajectory)
-        print('states collected:', len(memory['states']))
-
-        #fusion_episodes()
+        print('states collected:', len(memory['observations']))
 
     else:
         try:
@@ -163,53 +192,13 @@ def main():
             pass
 
         print(f"Length Memory Trajectories: {len(memory['dones'])}")
-        #print(f"Length Memory Timesteps: {len(memory['dones'][1])}")
-        #print(f"Memory Dones: {memory['dones'][0][-10:]}")
-
-        #bc_train()
-
-def fusion_episodes():
-    csv_files = glob.glob('/home/berk/VS_Project/simglucose/examples/trajectories'+'*.{}'.format('csv'))
-    df_concat = pd.concat([pd.read_csv(f) for f in csv_files ], ignore_index=True)
-    print(df_concat)
-
-
-
-def bc_train():
-
-    import torch
-    from models.BC_model import NeuralNet
-    from models.load_policy import get_batch,load_policy
-    import torch.nn as nn
-    import torch.optim as optim
-
-    network = NeuralNet(1,128,64,1)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(network.parameters(),0.01,0.9)
-
-    losses = []
-    iter = []
-    for i in range(20):
-        state,action = get_batch()
-        for j in range(state.size()[0]):
-            network.zero_grad()
-            output = network(state[j])
-            loss = criterion(output,action[j])
-            if i%10==0:
-                losses.append(loss)
-                iter.append(i)
-            loss.backward()
-            optimizer.step()
-        print(loss)
-
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--collect', type=bool, default= 1)
     parser.add_argument('--save_path', type=str, default= '/home/berk/VS_Project/simglucose/examples/trajectories/DATA')
-    parser.add_argument('--pid_tune', nargs="+", default= [0.3, 0, 1])
-    parser.add_argument('--episodes', type=int, default= 2)
+    parser.add_argument('--pid_tune', nargs="+", default= [0.5, 0, 0.1])
+    parser.add_argument('--episodes', type=int, default= 1)
     parser.add_argument('--timesteps', type=int, default= 100)
 
     args = parser.parse_args()
