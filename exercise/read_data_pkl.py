@@ -4,7 +4,7 @@ import pandas as pd
 file = "/home/berk/VS_Project/simglucose/halfcheetah-expert-v2.pkl"
 
 
-obj = pd.read_pickle(r'/home/berk/VS_Project/simglucose/halfcheetah-expert-v2.pkl')
+obj = pd.read_pickle(r'/home/berk/VS_Project/simglucose/examples/trajectories/halfcheetah-expert-v2.pkl')
 #obj = pd.read_csv(r'/home/berk/VS_Project/simglucose/halfcheetah-expert-v2.pkl')
 
 print(type(obj))

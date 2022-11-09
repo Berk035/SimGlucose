@@ -16,7 +16,7 @@ os.environ["WANDB_DISABLED"] = "true" # we diable weights and biases logging for
 # with open('/home/berk/VS_Project/simglucose/filename2.pkl','rb') as handle:
 #     dataset = pkl.load(handle)
 
-dataset = pkl.load(open('/home/berk/VS_Project/simglucose/filename2.pkl','rb'))
+dataset = pkl.load(open('/home/berk/VS_Project/simglucose/examples/trajectories/DATA_Memory_eps_1-2022-11-07 20:43:00.pkl','rb'))
 
 @dataclass
 class DecisionTransformerGymDataCollator:
@@ -141,9 +141,8 @@ class TrainableDT(DecisionTransformerModel):
     def original_forward(self, **kwargs):
         return super().forward(**kwargs)
 
-# collator = DecisionTransformerGymDataCollator(dataset["train"])
+#collator = DecisionTransformerGymDataCollator(dataset["train"])
 collator = DecisionTransformerGymDataCollator(dataset)
-
 config = DecisionTransformerConfig(state_dim=collator.state_dim, act_dim=collator.act_dim)
 model = TrainableDT(config)
 
@@ -161,10 +160,13 @@ if test:
     max_grad_norm=0.25,
     )
 
+    from torch.utils.data import Dataset, DataLoader
+    dataset = Dataset(dataset, batch_size=1, shuffle=True)
+
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset["train"],
+        train_dataset=dataset,
         data_collator=collator,
     )
 

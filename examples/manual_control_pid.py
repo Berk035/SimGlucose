@@ -14,6 +14,7 @@ import pandas as pd
 import glob
 from datetime import datetime
 import numpy as np
+from simglucose.analysis.risk import risk_index
 
 
 class PIDAction:
@@ -125,12 +126,17 @@ def main():
                 next_observation, reward, done, info = env.step(action)
                 insulin_value = env.env.insulin_hist[-1]
                 risk = env.env.risk_hist[-1]
+                _, _, next_risk = risk_index([next_observation.CGM], 1)
 
-                obs_record.append([[observation.CGM], [risk]])
-                next_obs_record.append([next_observation.CGM])
-                action_record.append([insulin_value])
-                rew_record.append([reward])
-                dones.append([done])
+                #TODO: Next risk and current risk incompatible!!!
+                # print(f"Observation: {observation.CGM} \t Next Obs: {next_observation.CGM}")
+                # print(f"Risk: {risk} \t Next Risk: {next_risk}")
+
+                obs_record.append([np.array([[observation.CGM], [risk]])])
+                next_obs_record.append(np.array([[next_observation.CGM], [next_risk]]))
+                action_record.append(np.array([insulin_value]))
+                rew_record.append(np.array([reward]))
+                dones.append(np.array([done]))
                 timestamps.append(t)
 
                 observation = next_observation
@@ -163,7 +169,7 @@ def main():
                         with open(args.save_path + f"_eps_{n_trajectory}" + "-%s.pkl"%datetime.now().replace(second=0, microsecond=0), 'wb') as handle:
                             pkl.dump(df, handle, protocol=pkl.HIGHEST_PROTOCOL)
                         
-                        with open(args.save_path + "Memory" + f"_eps_{n_trajectory}" + "-%s.pkl"%datetime.now().replace(second=0, microsecond=0), 'wb') as handle:
+                        with open(args.save_path + "_Memory" + f"_eps_{n_trajectory}" + "-%s.pkl"%datetime.now().replace(second=0, microsecond=0), 'wb') as handle:
                             pkl.dump(memory, handle, protocol=pkl.HIGHEST_PROTOCOL)
 
                         #Save as csv file
@@ -171,7 +177,7 @@ def main():
                         df.to_csv(args.save_path + f"_eps_{n_trajectory}" + "-%s.csv"%datetime.now().replace(second=0, microsecond=0))
 
                         df2 = pd.DataFrame(data=memory)
-                        df2.to_csv(args.save_path + "Memory" + f"_eps_{n_trajectory}" + "-%s.csv"%datetime.now().replace(second=0, microsecond=0))
+                        df2.to_csv(args.save_path + "_Memory" + f"_eps_{n_trajectory}" + "-%s.csv"%datetime.now().replace(second=0, microsecond=0))
 
 
                     print("Episode finished after {} timesteps".format(t + 1))
