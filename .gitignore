@@ -3,6 +3,7 @@
 
 # results foler
 /results/
+/trajectories/
 
 # Setuptools distribution folder.
 /dist/
