@@ -66,6 +66,7 @@ class BBController(Controller):
             logger.info('Calculating bolus ...')
             logger.info('Meal = {meal} g/min')
             logger.info('glucose = {glucose}')
+
             bolus = (
                 (meal * env_sample_time) / quest.CR.values + (glucose > 150) *
                 (glucose - self.target) / quest.CF.values).item()  # unit: U
