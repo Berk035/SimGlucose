@@ -15,12 +15,21 @@ class Viewer(object):
 
     def initialize(self):
         plt.ion()
+        grid = True
+        
         fig, axes = plt.subplots(4)
+        
 
         axes[0].set_ylabel('BG (mg/dL)')
         axes[1].set_ylabel('CHO (g/min)')
         axes[2].set_ylabel('Insulin (U/min)')
         axes[3].set_ylabel('Risk Index')
+
+        if grid:
+            axes[0].grid(True)
+            axes[1].grid(True)
+            axes[2].grid(True)
+            axes[3].grid(True)
 
         lineBG, = axes[0].plot([], [], label='BG')
         lineCGM, = axes[0].plot([], [], label='CGM')
@@ -80,8 +89,8 @@ class Viewer(object):
                     max(max(data['BG']), max(data['CGM'])))
         adjust_xlim(self.axes[0], data.index[-1])
 
-        self.lines[2].set_xdata(data.index.values)
-        self.lines[2].set_ydata(data['CHO'].values)
+        #self.lines[2].set_xdata(data.index.values)
+        #self.lines[2].set_ydata(data['CHO'].values)
 
         self.axes[1].draw_artist(self.axes[1].patch)
         self.axes[1].draw_artist(self.lines[2])
@@ -142,6 +151,30 @@ def adjust_ylim(ax, ymin, ymax):
         ax.draw_artist(ax.yaxis)
 
 
+# def adjust_xlim(ax, timemax, xlabel=False):
+#     xlim = mdates.num2date(ax.get_xlim())
+#     update = False
+
+#     # remove timezone awareness to make them comparable
+#     timemax = timemax.replace(tzinfo=None)
+#     xlim[0] = xlim[0].replace(tzinfo=None)
+#     xlim[1] = xlim[1].replace(tzinfo=None)
+
+#     if timemax > xlim[1] - timedelta(minutes=30):
+#         xmax = xlim[1] + timedelta(hours=6)
+#         update = True
+
+#     if update:
+#         ax.set_xlim([xlim[0], xmax])
+#         for spine in ax.spines.values():
+#             ax.draw_artist(spine)
+#         ax.draw_artist(ax.xaxis)
+#         if xlabel:
+#             ax.xaxis.set_minor_locator(mdates.AutoDateLocator())
+#             ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M\n'))
+#             ax.xaxis.set_major_locator(mdates.DayLocator())
+#             ax.xaxis.set_major_formatter(mdates.DateFormatter('\n%b %d'))
+
 def adjust_xlim(ax, timemax, xlabel=False):
     xlim = mdates.num2date(ax.get_xlim())
     update = False
@@ -151,12 +184,13 @@ def adjust_xlim(ax, timemax, xlabel=False):
     xlim[0] = xlim[0].replace(tzinfo=None)
     xlim[1] = xlim[1].replace(tzinfo=None)
 
-    if timemax > xlim[1] - timedelta(minutes=30):
+    #if timemax > xlim[1] - timedelta(minutes=30): Removed offset!!
+    if timemax > xlim[1]:
         xmax = xlim[1] + timedelta(hours=6)
         update = True
 
     if update:
-        ax.set_xlim([xlim[0], xmax])
+        ax.set_xlim([xlim[1], xmax]) #It is changed from xlim[0]
         for spine in ax.spines.values():
             ax.draw_artist(spine)
         ax.draw_artist(ax.xaxis)
