@@ -26,8 +26,7 @@ class CGMSensor(object):
     def measure(self, patient):
         if patient.t % self.sample_time == 0:
             BG = patient.observation.Gsub
-            CGM = BG + 0 #Zero Noise
-            #CGM = BG + next(self._noise_generator)
+            CGM = BG + next(self._noise_generator)
             CGM = max(CGM, self._params["min"])
             CGM = min(CGM, self._params["max"])
             self._last_CGM = CGM

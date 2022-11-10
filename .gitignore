@@ -1,11 +1,8 @@
 # Compiled python modules.
 *.pyc
-__pycache__/
 
-# results folder
+# results foler
 /results/
-/examples/results/
-/examples/trajectories
 
 # Setuptools distribution folder.
 /dist/
@@ -17,4 +14,3 @@ __pycache__/
 
 #Env files
 SIMBG/
-
