@@ -28,11 +28,13 @@ INSULIN_PUMP_PARA_FILE = pkg_resources.resource_filename(
 
 def pick_patients():
     patient_params = pd.read_csv(PATIENT_PARA_FILE)
+
     patient_names = list(patient_params['Name'].values)
     while True:
         select1 = input('Select virtual patients:\n' + '[1] All\n' +
                         '[2] All Adolescents\n' + '[3] All Adults\n' +
                         '[4] All Children\n' + '[5] By ID\n' + '>>> ')
+
         try:
             select1 = int(select1)
         except ValueError:
@@ -119,9 +121,9 @@ def pick_cgm_sensor():
     logger.info('Selected sensor:\n{}'.format(sensor))
     return sensor
 
-
 def pick_cgm_seed():
     while True:
+
         input_value = input('Select Random Seed for Sensor Noise [None]: ')
         try:
             seed = int(input_value)
@@ -241,10 +243,10 @@ def input_custom_scenario():
             go_on = input('Continue input snack (y/n)? ')
     return scenario
 
-
 def pick_controller():
     controller = None
     while True:
+
         print('Select controller:')
         print('[1] Basal-Bolus Controller')
         input_value = input('>>>')
@@ -260,7 +262,6 @@ def pick_controller():
     if selection == 1:
         controller = BBController()
     return controller
-
 
 def pick_save_path():
     foldername = input('Folder name to save results [default]: ')

@@ -118,19 +118,11 @@ def main():
                 # In the perfect situation, the agent should be able
                 # to control the glucose only through basal instead
                 # of asking patient to take bolus
-                
-                #print("Action: %.3f"%action)
-                #print(f"Observation: {observation}")
-                #print(f"Timestep: {t} \n Traj: {n_trajectory}")
 
                 next_observation, reward, done, info = env.step(action)
                 insulin_value = env.env.insulin_hist[-1]
-                risk = env.env.risk_hist[-1]
+                _, _, risk = risk_index([observation.CGM], 1)
                 _, _, next_risk = risk_index([next_observation.CGM], 1)
-
-                #TODO: Next risk and current risk incompatible!!!
-                # print(f"Observation: {observation.CGM} \t Next Obs: {next_observation.CGM}")
-                # print(f"Risk: {risk} \t Next Risk: {next_risk}")
 
                 obs_record.append([np.array([[observation.CGM], [risk]])])
                 next_obs_record.append(np.array([[next_observation.CGM], [next_risk]]))
