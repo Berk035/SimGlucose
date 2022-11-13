@@ -4,7 +4,8 @@
 # results folder
 /examples/results/
 /results/
-examples/trajectories/
+/examples/trajectories/*
+*.pkl
 wandb/
 
 # Setuptools distribution folder.
