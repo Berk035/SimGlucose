@@ -1,9 +1,11 @@
 # Compiled python modules.
 *.pyc
 
-# results foler
+# results folder
+/examples/results/
 /results/
-/trajectories/
+examples/trajectories/
+wandb/
 
 # Setuptools distribution folder.
 /dist/
@@ -15,6 +17,9 @@
 
 #Env files
 SIMBG/
+D4RL/
+decision-transformer/
+!decision-transformer/gym/experiment.py
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
@@ -200,4 +205,5 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # idea folder, uncomment if you don't need it
-# .idea
+.idea
+
