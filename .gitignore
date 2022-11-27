@@ -20,6 +20,7 @@ wandb/
 SIMBG/
 D4RL/
 decision-transformer/
+rllab/
 !decision-transformer/gym/experiment.py
 
 # Created by .ignore support plugin (hsz.mobi)

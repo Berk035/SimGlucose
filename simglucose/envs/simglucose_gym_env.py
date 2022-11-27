@@ -63,7 +63,8 @@ class T1DSimEnv(gym.Env):
         seed3 = seeding.hash_seed(seed2 + 1) % 2**31
         seed4 = seeding.hash_seed(seed3 + 1) % 2**31
 
-        hour = self.np_random.randint(low=0.0, high=24.0)
+        # hour = self.np_random.randint(low=0.0, high=24.0)
+        hour = int(7)
         start_time = datetime(2018, 1, 1, hour, 0, 0)
         patient = T1DPatient.withName(self.patient_name, random_init_bg=True, seed=seed4)
         sensor = CGMSensor.withName(self.SENSOR_HARDWARE, seed=seed2)

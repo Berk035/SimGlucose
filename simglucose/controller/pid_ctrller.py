@@ -14,6 +14,7 @@ class PIDController(Controller):
         self.integrated_state = 0
         self.prev_state = 0
         self.prev_error = 0
+        #TODO: error handling
 
     def policy(self, observation, reward, done, **kwargs):
         sample_time = kwargs.get('sample_time')
@@ -24,7 +25,7 @@ class PIDController(Controller):
         self.integrated_state += error
         control_input = self.P * error + \
             self.I * self.integrated_state + \
-            self.D * (error - self.prev_error)
+            self.D * (error - self.prev_error) #Previous variable was BG
 
         logger.info('Control input: {}'.format(control_input))
 

@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 with open ('/home/berk/VS_Project/simglucose/examples/trajectories/hopper-medium-replay-v2.pkl', 'rb') as handle:
     orj_data = pkl.load(handle)
 
-with open ('/home/berk/VS_Project/simglucose/examples/trajectories/DATA_eps_2-2022-11-12 20:29:00.pkl', 'rb') as handle:
+with open ('/home/berk/VS_Project/simglucose/examples/trajectories/DATA_eps_11-2022-11-21 20:20:00.pkl', 'rb') as handle:
     own_data = pkl.load(handle)
 
 print(type(orj_data))

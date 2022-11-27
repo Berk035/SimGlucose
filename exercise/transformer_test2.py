@@ -2,7 +2,7 @@ import pickle as pkl
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 
-with open ('/home/berk/VS_Project/simglucose/examples/trajectories/DATA_eps_1-2022-11-10 22:13:00.pkl', 'rb') as handle:
+with open ('/home/berk/VS_Project/simglucose/examples/trajectories/DATA_eps_11-2022-11-21 20:20:00.pkl', 'rb') as handle:
     df = pkl.load(handle)
 
 class CustomDataset(Dataset):

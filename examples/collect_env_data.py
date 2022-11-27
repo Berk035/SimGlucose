@@ -17,7 +17,7 @@ import numpy as np
 from simglucose.analysis.risk import risk_index
 
 class PIDAction:
-    def __init__(self, P=1, I=0, D=0, target=1):
+    def __init__(self, P=1, I=0, D=0, target=0):
         self.P = P
         self.I = I
         self.D = D
@@ -26,24 +26,23 @@ class PIDAction:
         self.prev_state = 0
 
     def policy(self, current_act):
-        sample_time = 3
+        sampling = 3
 
         # BG is the only state for this PID controller
         control = current_act
-        control_input = self.P * (control - self.target) + \
-            self.I * self.integrated_state + \
-            self.D * (control - self.prev_state) / sample_time
+        error = self.target - control
+        control_input = self.P * error + self.I * self.integrated_state + self.D * (self.prev_state - control)
 
         # update the states
         self.prev_state = control
-        self.integrated_state += (control - self.target) * sample_time
+        self.integrated_state += error
 
         # # return the actionq
         action = control_input
-        if action <=0:
-            #self.target=0
-            action=0
-        # #print(f"Target: \t {(self.target)} \n Action: \t {(action)}")
+        if action <0: action=0
+        if self.target<0: self.target=0
+            
+        print(f"Target Action: {(self.target)} \t Action: {(action)}")
     
         #print("Target:%.3f"%self.target)
         return action
@@ -52,13 +51,12 @@ class PIDAction:
         self.prev_state = 0
         self.integrated_state = 0
         
-    def key_callback(self,act):
+    def key_callback(self):
         if keyboard.is_pressed('up'):
-            act +=0.5
+            self.target +=0.5
             #self.target+=0.5
         if keyboard.is_pressed('down'):
-            act -=0.5
-        return act
+            self.target -=0.5
 
 
 def main():
@@ -92,7 +90,7 @@ def main():
             dones = []
             timestamps = []
 
-            pid_controller = PIDController(P=-1.74e-04, I=-1e-07, D=-1e-02, target=120)
+            pid_controller = PIDController(P=-1.74e-04, I=-1e-09, D=-1e-015, target=120)
             pid_controller.reset()
 
             for t in range(args.timesteps):
@@ -100,8 +98,8 @@ def main():
                 action = 0
                 if args.collect: 
                     if args.collect_type == 'manual':
-                        action_ref = act_obj.key_callback(action_ref)
-                        action = act_obj.policy(action_ref)
+                        act_obj.key_callback()
+                        action = act_obj.policy(action)
                     elif args.collect_type == 'pid':
                         if t==0: pass
                         else: 
@@ -124,8 +122,8 @@ def main():
                 _, _, risk = risk_index([observation.CGM], 1)
                 _, _, next_risk = risk_index([next_observation.CGM], 1)
 
-                obs_record.append([observation.CGM, risk])
-                next_obs_record.append([next_observation.CGM, next_risk])
+                obs_record.append([observation.CGM])
+                next_obs_record.append([next_observation.CGM])
                 action_record.append([insulin_value])
                 rew_record.append(reward)
                 dones.append(done)
@@ -184,9 +182,9 @@ if __name__ == '__main__':
     parser.add_argument('--collect', type=bool, default= 1)
     parser.add_argument('--collect_type', type=str, default= 'manual', help="Select option manual/pid")
     parser.add_argument('--save_path', type=str, default= '/home/berk/VS_Project/simglucose/examples/trajectories/')
-    parser.add_argument('--pid_tune', nargs="+", default= [0.5, 0, 0.1])
-    parser.add_argument('--episodes', type=int, default= 2)
-    parser.add_argument('--timesteps', type=int, default= 500)
+    parser.add_argument('--pid_tune', nargs="+", default= [1e-1, 0, 0])
+    parser.add_argument('--episodes', type=int, default= 10)
+    parser.add_argument('--timesteps', type=int, default= 480*5) #5 Days
 
     args = parser.parse_args()
     main()
