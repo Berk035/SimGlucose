@@ -22,6 +22,7 @@ D4RL/
 decision-transformer/
 rllab/
 !decision-transformer/gym/experiment.py
+T1DatasetAnalysis/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
