@@ -1,13 +1,6 @@
 # Compiled python modules.
 *.pyc
 
-# results folder
-/examples/results/
-/results/
-/examples/trajectories/*
-*.pkl
-wandb/
-
 # Setuptools distribution folder.
 /dist/
 /build/
@@ -15,14 +8,6 @@ wandb/
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
 /*.egg
-
-#Env files
-SIMBG/
-D4RL/
-decision-transformer/
-rllab/
-!decision-transformer/gym/experiment.py
-T1DatasetAnalysis/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
@@ -106,9 +91,6 @@ celerybeat-schedule
 # dotenv
 .env
 
-# virtualenv
-venv/
-ENV/
 
 # Spyder project settings
 .spyderproject
@@ -210,3 +192,26 @@ fabric.properties
 # idea folder, uncomment if you don't need it
 .idea
 
+#--------------- special files
+
+# virtualenv
+venv/
+ENV/
+SIMBG/
+
+#Env file
+OtherRepos/
+D4RL/
+decision-transformer/
+online-dt/
+rllab/
+
+#Dataset folder
+T1DatasetAnalysis/
+
+# results folder
+/examples/results/
+/results/
+/examples/trajectories/*
+*.pkl
+wandb/
