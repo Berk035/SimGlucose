@@ -200,10 +200,10 @@ ENV/
 SIMBG/
 
 #Env file
-OtherRepos/
-D4RL/
-decision-transformer/
-online-dt/
+#OtherRepos/
+#D4RL/
+#decision-transformer/
+#online-dt/
 rllab/
 
 #Dataset folder
